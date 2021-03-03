@@ -37,6 +37,9 @@ app.use(express.urlencoded({ extended: false }));
 
 //app.use(cookieParser('12345-67890-09876-54321'));
 
+var passport = require('passport');
+var authenticate = require('./authenticate');
+
 app.use(
   session({
     name: 'session-id',
@@ -47,22 +50,21 @@ app.use(
   })
 );
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
 function auth(req, res, next) {
-  if (!req.session.user) {
+  console.log(req.user);
+
+  if (!req.user) {
     var err = new Error('You are not authenticated!');
     err.status = 403;
-    return next(err);
+    next(err);
   } else {
-    if (req.session.user === 'authenticated') {
-      next();
-    } else {
-      var err = new Error('You are not authenticated!');
-      err.status = 403;
-      return next(err);
-    }
+    next();
   }
 }
 
