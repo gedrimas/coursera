@@ -12,14 +12,46 @@ var http = require('http');
  * Get port from environment and store in Express.
  */
 
+// SSL
+var https = require('https');
+var fs = require('fs');
+// SSL
+
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
+
+// SSL
+app.set('secPort', port + 443);
+// SSL
 
 /**
  * Create HTTP server.
  */
 
 var server = http.createServer(app);
+
+// SSL
+/**
+ * Create HTTPS server.
+ */
+
+var options = {
+  key: fs.readFileSync(__dirname + '/private.key'),
+  cert: fs.readFileSync(__dirname + '/certificate.pem'),
+};
+
+var secureServer = https.createServer(options, app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+secureServer.listen(app.get('secPort'), () => {
+  console.log('Server listening on port ', app.get('secPort'));
+});
+secureServer.on('error', onError);
+secureServer.on('listening', onListening);
+// SSL
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -58,9 +90,7 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -83,8 +113,6 @@ function onError(error) {
 
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
+  var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
