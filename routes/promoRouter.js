@@ -27,7 +27,7 @@ promoRouter
       )
       .catch((err) => next(err));
   })
-  .post(authenticate.verifyUser, (req, res, next) => {
+  .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Promotions.create(req.body)
       .then(
         (promotion) => {
@@ -39,22 +39,26 @@ promoRouter
       )
       .catch((err) => next(err));
   })
-  .put(authenticate.verifyUser, (req, res, next) => {
+  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /promotions/');
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
-    Promotions.remove({})
-      .then(
-        (allPromotions) => {
-          res.statusCode = 200;
-          res.setHeader('Content-Type', 'application/json');
-          res.json(allPromotions);
-        },
-        (err) => next(err)
-      )
-      .catch((err) => next(err));
-  });
+  .delete(
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      Promotions.remove({})
+        .then(
+          (allPromotions) => {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(allPromotions);
+          },
+          (err) => next(err)
+        )
+        .catch((err) => next(err));
+    }
+  );
 
 promoRouter
   .route('/:promoId')
@@ -70,11 +74,11 @@ promoRouter
       res.end('Promotion ' + req.params.promoId + ' not found');
     }
   })
-  .post(authenticate.verifyUser, (req, res, next) => {
+  .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end(`POST operation for promotions/${req.params.promoId} not suported`);
   })
-  .put(authenticate.verifyUser, (req, res, next) => {
+  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Promotions.findByIdAndUpdate(req.params.promoId, req.body)
       .then((promotion) => {
         res.statusCode = 200;
@@ -86,18 +90,22 @@ promoRouter
         res.end(`PUT operation for promotions/${req.params.promoId} failed`);
       });
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
-    Promotions.findByIdAndRemove(req.params.promoId).then(
-      (promotion) => {
-        res.sendStatus = 200;
-        res.setHeader('content-type', 'application/json');
-        res.json(promotion);
-      },
-      (err) => {
-        res.statusCode = 403;
-        res.end(`Promotion ${req.params.promoId} not removed`);
-      }
-    );
-  });
+  .delete(
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      Promotions.findByIdAndRemove(req.params.promoId).then(
+        (promotion) => {
+          res.sendStatus = 200;
+          res.setHeader('content-type', 'application/json');
+          res.json(promotion);
+        },
+        (err) => {
+          res.statusCode = 403;
+          res.end(`Promotion ${req.params.promoId} not removed`);
+        }
+      );
+    }
+  );
 
 module.exports = promoRouter;
